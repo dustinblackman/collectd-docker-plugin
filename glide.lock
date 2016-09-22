@@ -1,0 +1,56 @@
+hash: ee40a58eadbb0c71f94ffed3890dfd169a3815d4fbb0eb89aa9521013f3ec416
+updated: 2016-09-22T13:28:28.583198332-04:00
+imports:
+- name: github.com/davecgh/go-spew
+  version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
+- name: github.com/docker/docker
+  version: 79c1cd87ec74aa5ca71ceb52e12ab2f15efd8b24
+  subpackages:
+  - opts
+  - pkg/archive
+  - pkg/fileutils
+  - pkg/homedir
+  - pkg/stdcopy
+  - pkg/idtools
+  - pkg/ioutils
+  - pkg/pools
+  - pkg/promise
+  - pkg/system
+  - pkg/longpath
+- name: github.com/docker/engine-api
+  version: 94a8f8f29307ab291abad6c6f2182d67089aae5d
+  subpackages:
+  - types/swarm
+  - types/filters
+  - types/mount
+  - types/versions
+- name: github.com/docker/go-units
+  version: 9b001659dd36225e356b4467c465d732e745f53d
+- name: github.com/fatih/camelcase
+  version: f6a740d52f961c60348ebb109adde9f4635d7540
+- name: github.com/fatih/structs
+  version: dc3312cb1a4513a366c4c9e622ad55c32df12ed3
+- name: github.com/fsouza/go-dockerclient
+  version: 4c88c36676d7f65179f308949e16523d21573d9e
+- name: github.com/hashicorp/go-cleanhttp
+  version: ad28ea4487f05916463e2423a55166280e8254b5
+- name: github.com/Microsoft/go-winio
+  version: ce2922f643c8fd76b46cadc7f404a06282678b34
+- name: github.com/opencontainers/runc
+  version: a2a6e828a9cafd11fb02b3589833a77c7af50b2f
+  subpackages:
+  - libcontainer/user
+- name: github.com/Sirupsen/logrus
+  version: 26709e2714106fb8ad40b773b711ebce25b78914
+- name: github.com/urfave/cli
+  version: d53eb991652b1d438abdd34ce4bfa3ef1539108e
+- name: golang.org/x/net
+  version: 6d3beaea10370160dea67f5c9327ed791afd5389
+  subpackages:
+  - context
+  - context/ctxhttp
+- name: golang.org/x/sys
+  version: 8f0908ab3b2457e2e15403d3697c9ef5cb4b57a9
+  subpackages:
+  - windows
+devImports: []

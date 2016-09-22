@@ -1,0 +1,11 @@
+language: go
+go:
+ - 1.7
+cache:
+  directories:
+  - vendor
+install:
+  - make deps
+  - make setup-linter
+script:
+ - make test

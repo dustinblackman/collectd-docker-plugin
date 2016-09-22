@@ -1,0 +1,6 @@
+package: github.com/dustinblackman/collectd-docker-plugin
+import:
+- package: github.com/urfave/cli
+- package: github.com/davecgh/go-spew
+- package: github.com/fatih/structs
+- package: github.com/fsouza/go-dockerclient

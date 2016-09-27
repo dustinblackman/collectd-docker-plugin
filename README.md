@@ -11,7 +11,7 @@ Collectd plugin to tap in the Docker Stats streaming API using Collectd's [Exec]
 Example installation for a Ubuntu system. Make changes required to match your own OS.
 
 ```bash
-curl -Ls "https://github.com/dustinblackman/collectd-docker-plugin/releases/download/0.0.1/collectd-docker-plugin-linux-amd64-0.0.1.tar.gz" | tar xz -C /usr/local/bin/
+curl -Ls "https://github.com/dustinblackman/collectd-docker-plugin/releases/download/0.1.0/collectd-docker-plugin-linux-amd64-0.0.1.tar.gz" | tar xz -C /usr/local/bin/
 curl -o /usr/share/collectd https://github.com/dustinblackman/collectd-docker-plugin/blob/master/collectd/docker.db
 curl -o /etc/collectd/collectd.conf.d https://github.com/dustinblackman/collectd-docker-plugin/blob/master/collectd/docker.conf
 usermod -a -G docker nobody

@@ -12,8 +12,8 @@ Example installation for a Ubuntu system. Make changes required to match your ow
 
 ```bash
 curl -Ls "https://github.com/dustinblackman/collectd-docker-plugin/releases/download/0.1.0/collectd-docker-plugin-linux-amd64-0.0.1.tar.gz" | tar xz -C /usr/local/bin/
-curl -o /usr/share/collectd https://github.com/dustinblackman/collectd-docker-plugin/blob/master/collectd/docker.db
-curl -o /etc/collectd/collectd.conf.d https://github.com/dustinblackman/collectd-docker-plugin/blob/master/collectd/docker.conf
+curl -o /usr/share/collectd https://raw.githubusercontent.com/dustinblackman/collectd-docker-plugin/master/collectd/docker.db
+curl -o /etc/collectd/collectd.conf.d https://raw.githubusercontent.com/dustinblackman/collectd-docker-plugin/master/collectd/docker.conf
 usermod -a -G docker nobody
 service collectd restart
 ```

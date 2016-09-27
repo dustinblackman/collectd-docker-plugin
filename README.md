@@ -4,6 +4,8 @@
 
 Collectd plugin to tap in the Docker Stats streaming API using Collectd's [Exec](https://collectd.org/wiki/index.php/Plugin:Exec) plugin. Built with Go 1.7 and tested with Collectd 5.5 and Influx 1.0.
 
+## [Changelog](./CHANGELOG.md)
+
 ## Installation
 
 Example installation for a Ubuntu system. Make changes required to match your own OS.
@@ -23,7 +25,7 @@ Parameters are available and can be added by modifying [docker.conf](./collectd/
 - `-d, --docker-host` - Docker socket path. Defaults to `unix:///var/run/docker.sock`
 - `-de, --docker-environment` - Boolean parameter to specifiy reading Docker parameters from environment variables
 - `-ch, --collectd-hostname` - Collectd hostname. This is automatically provided to the process from Collectd.
-- `-w, --wait-time` - Delay in seconds with how often metrics are submitted to Collectd. Defaults to 3.
+- `-w, --wait-time` - Delay in seconds with how often metrics are submitted to Collectd. If wait time is set to `1`, it will use Docker Stats API streaming, otherwise it polls. Defaults to `5`.
 
 ## Build From Source
 

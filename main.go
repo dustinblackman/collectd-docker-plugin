@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/fatih/camelcase"
 	"github.com/fatih/structs"
 	docker "github.com/fsouza/go-dockerclient"
@@ -15,8 +14,10 @@ import (
 )
 
 var (
-	host    = "localhost"
-	version = "HEAD"
+	client   *docker.Client
+	host     = "localhost"
+	version  = "HEAD"
+	waitTime int
 )
 
 func printCollectD(containerName, statType, statTypeInstance string, value uint64) {
@@ -28,8 +29,34 @@ func toUnderscore(key string) string {
 	return strings.ToLower(strings.Join(camelcase.Split(key), "_"))
 }
 
-func getStats(client *docker.Client, container *docker.Container, waitTime int) {
-	containerName := container.Name[1:len(container.Name)]
+func processStats(containerName string, stats *docker.Stats) {
+	// Memory
+	printCollectD(containerName, "memory", "max_usage", stats.MemoryStats.MaxUsage)
+	printCollectD(containerName, "memory", "usage", stats.MemoryStats.Usage)
+	for key, value := range structs.Map(stats.MemoryStats.Stats) {
+		printCollectD(containerName, "memory", toUnderscore(key), value.(uint64))
+	}
+
+	// CPU
+	printCollectD(containerName, "cpu", "total_usage", stats.CPUStats.CPUUsage.TotalUsage)
+
+	// Network
+	mergedNetworks := map[string]uint64{}
+	for _, value := range stats.Networks {
+		for networkKey, networkValue := range structs.Map(value) {
+			if _, ok := mergedNetworks[networkKey]; ok {
+				mergedNetworks[networkKey] += networkValue.(uint64)
+			} else {
+				mergedNetworks[networkKey] = networkValue.(uint64)
+			}
+		}
+	}
+	for key, value := range mergedNetworks {
+		printCollectD(containerName, "network", toUnderscore(key), value)
+	}
+}
+
+func liveStats(container *docker.Container, containerName string) {
 	errC := make(chan error, 1)
 	statsC := make(chan *docker.Stats)
 
@@ -37,45 +64,12 @@ func getStats(client *docker.Client, container *docker.Container, waitTime int) 
 		errC <- client.Stats(docker.StatsOptions{ID: container.ID, Stats: statsC, Stream: true})
 	}()
 
-	currentInterval := 0
 	for {
 		stats, ok := <-statsC
 		if !ok {
-			spew.Dump(stats)
 			break
 		}
-
-		// Wait time
-		currentInterval++
-		if currentInterval != waitTime {
-			continue
-		}
-		currentInterval = 0
-
-		// Memory
-		printCollectD(containerName, "memory", "max_usage", stats.MemoryStats.MaxUsage)
-		printCollectD(containerName, "memory", "usage", stats.MemoryStats.Usage)
-		for key, value := range structs.Map(stats.MemoryStats.Stats) {
-			printCollectD(containerName, "memory", toUnderscore(key), value.(uint64))
-		}
-
-		// CPU
-		printCollectD(containerName, "cpu", "total_usage", stats.CPUStats.CPUUsage.TotalUsage)
-
-		// Network
-		mergedNetworks := map[string]uint64{}
-		for _, value := range stats.Networks {
-			for networkKey, networkValue := range structs.Map(value) {
-				if _, ok := mergedNetworks[networkKey]; ok {
-					mergedNetworks[networkKey] += networkValue.(uint64)
-				} else {
-					mergedNetworks[networkKey] = networkValue.(uint64)
-				}
-			}
-		}
-		for key, value := range mergedNetworks {
-			printCollectD(containerName, "network", toUnderscore(key), value)
-		}
+		processStats(containerName, stats)
 	}
 
 	err := <-errC
@@ -84,10 +78,48 @@ func getStats(client *docker.Client, container *docker.Container, waitTime int) 
 	}
 }
 
+func pollStats(container *docker.Container, containerName string) {
+	for {
+		errC := make(chan error, 1)
+		statsC := make(chan *docker.Stats)
+
+		go func() {
+			errC <- client.Stats(docker.StatsOptions{ID: container.ID, Stats: statsC, Stream: false})
+		}()
+
+		for {
+			stats, ok := <-statsC
+			if !ok {
+				break
+			}
+			processStats(containerName, stats)
+		}
+
+		err := <-errC
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+}
+
+func getStats(containerID string) {
+	container, err := client.InspectContainer(containerID)
+	if err != nil {
+		log.Fatal(err)
+	}
+	containerName := container.Name[1:len(container.Name)]
+	// Docker Stats API emits stats every second.
+	if waitTime == 1 {
+		liveStats(container, containerName)
+	} else {
+		pollStats(container, containerName)
+	}
+}
+
 func listContainers(ctx *cli.Context) {
 	host = ctx.String("collectd-hostname")
+	waitTime = ctx.Int("wait-time")
 
-	var client *docker.Client
 	var err interface{}
 	if ctx.Bool("docker-environment") {
 		client, err = docker.NewClientFromEnv()
@@ -107,29 +139,16 @@ func listContainers(ctx *cli.Context) {
 	}
 
 	for _, container := range containers {
-		containerDetails, err := client.InspectContainer(container.ID)
-		if err != nil {
-			log.Fatal(err)
-		}
-		go getStats(client, containerDetails, ctx.Int("wait-time"))
+		go getStats(container.ID)
 	}
 
-	go func() {
-		dockerEvents := make(chan *docker.APIEvents, 100)
-		client.AddEventListener(dockerEvents)
-		for event := range dockerEvents {
-			if event.Status == "start" {
-				containerDetails, err := client.InspectContainer(event.ID)
-				if err != nil {
-					log.Fatal(err)
-				}
-				go getStats(client, containerDetails, ctx.Int("wait-time"))
-			}
+	dockerEvents := make(chan *docker.APIEvents, 100)
+	client.AddEventListener(dockerEvents)
+	for event := range dockerEvents {
+		if event.Status == "start" {
+			go getStats(event.ID)
 		}
-	}()
-
-	// Wait forever.
-	select {}
+	}
 }
 
 func main() {
@@ -160,8 +179,8 @@ func main() {
 		},
 		cli.IntFlag{
 			Name:  "wait-time, w",
-			Usage: "Wait time between how often stats should be submitted to collectd",
-			Value: 3,
+			Usage: "Wait time between how often stats should be requested from the Docker stats API",
+			Value: 5,
 		},
 	}
 

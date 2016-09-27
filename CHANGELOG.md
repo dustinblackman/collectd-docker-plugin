@@ -1,5 +1,10 @@
 # Changelog
 
+<a name="0.1.1" />
+### 0.1.1 (August 27th, 2016)
+
+- Fixed polling bug
+
 <a name="0.1.0" />
 ### 0.1.0 (August 27th, 2016)
 

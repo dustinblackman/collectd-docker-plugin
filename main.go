@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/fatih/camelcase"
 	"github.com/fatih/structs"
@@ -56,12 +57,12 @@ func processStats(containerName string, stats *docker.Stats) {
 	}
 }
 
-func liveStats(container *docker.Container, containerName string) {
+func callStats(container *docker.Container, containerName string, stream bool) error {
 	errC := make(chan error, 1)
 	statsC := make(chan *docker.Stats)
 
 	go func() {
-		errC <- client.Stats(docker.StatsOptions{ID: container.ID, Stats: statsC, Stream: true})
+		errC <- client.Stats(docker.StatsOptions{ID: container.ID, Stats: statsC, Stream: stream})
 	}()
 
 	for {
@@ -73,33 +74,11 @@ func liveStats(container *docker.Container, containerName string) {
 	}
 
 	err := <-errC
-	if err != nil {
+	if stream && err != nil {
 		log.Fatal(err)
 	}
-}
 
-func pollStats(container *docker.Container, containerName string) {
-	for {
-		errC := make(chan error, 1)
-		statsC := make(chan *docker.Stats)
-
-		go func() {
-			errC <- client.Stats(docker.StatsOptions{ID: container.ID, Stats: statsC, Stream: false})
-		}()
-
-		for {
-			stats, ok := <-statsC
-			if !ok {
-				break
-			}
-			processStats(containerName, stats)
-		}
-
-		err := <-errC
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
+	return err
 }
 
 func getStats(containerID string) {
@@ -110,9 +89,15 @@ func getStats(containerID string) {
 	containerName := container.Name[1:len(container.Name)]
 	// Docker Stats API emits stats every second.
 	if waitTime == 1 {
-		liveStats(container, containerName)
+		callStats(container, containerName, true)
 	} else {
-		pollStats(container, containerName)
+		for {
+			err := callStats(container, containerName, false)
+			if err != nil {
+				break
+			}
+			time.Sleep(time.Duration(waitTime) * time.Second)
+		}
 	}
 }
 

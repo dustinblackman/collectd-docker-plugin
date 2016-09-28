@@ -1,5 +1,10 @@
 # Changelog
 
+<a name="0.2.0" />
+### 0.2.0 (August 28th, 2016)
+
+- Added type_instance `percent_usage` for `cpu`
+
 <a name="0.1.1" />
 ### 0.1.1 (August 27th, 2016)
 

@@ -40,6 +40,14 @@ func processStats(containerName string, stats *docker.Stats) {
 
 	// CPU
 	printCollectD(containerName, "cpu", "total_usage", stats.CPUStats.CPUUsage.TotalUsage)
+	// Borrowed from https://github.com/docker/docker/blob/c0699cd4a43ccc3b1e3624379e46e9ed94f7428c/cli/command/container/stats_helpers.go#L184-L197
+	cpuPercent := 0.0
+	cpuDelta := float64(stats.CPUStats.CPUUsage.TotalUsage) - float64(stats.PreCPUStats.CPUUsage.TotalUsage)
+	systemDelta := float64(stats.CPUStats.SystemCPUUsage) - float64(stats.PreCPUStats.SystemCPUUsage)
+	if systemDelta > 0.0 && cpuDelta > 0.0 {
+		cpuPercent = (cpuDelta / systemDelta) * float64(len(stats.CPUStats.CPUUsage.PercpuUsage)) * 100.0
+	}
+	printCollectD(containerName, "cpu", "percent_usage", uint64(cpuPercent))
 
 	// Network
 	mergedNetworks := map[string]uint64{}

@@ -19,11 +19,12 @@ var (
 	host     = "localhost"
 	version  = "HEAD"
 	waitTime int
+	interval int
 )
 
 func printCollectD(containerName, statType, statTypeInstance string, value uint64) {
 	valueString := strconv.FormatUint(value, 10)
-	fmt.Printf("PUTVAL \"%s/docker-%s/%s-%s\" interval=60 N:%s\n", host, containerName, statType, statTypeInstance, valueString)
+	fmt.Printf("PUTVAL \"%s/docker-%s/%s-%s\" interval=%d N:%s\n", host, containerName, statType, statTypeInstance, interval, valueString)
 }
 
 func toUnderscore(key string) string {
@@ -130,6 +131,7 @@ func getStats(containerID string) {
 func listContainers(ctx *cli.Context) {
 	host = ctx.String("collectd-hostname")
 	waitTime = ctx.Int("wait-time")
+	interval = ctx.Int("interval")
 
 	var err interface{}
 	if ctx.Bool("docker-environment") {
@@ -192,6 +194,11 @@ func main() {
 			Name:  "wait-time, w",
 			Usage: "Wait time between how often stats should be requested from the Docker stats API",
 			Value: 5,
+		},
+		cli.IntFlag{
+			Name:  "interval, i",
+			Usage: "Set interval for collecting metrics",
+			Value: 60,
 		},
 	}
 

@@ -4,14 +4,12 @@
 
 Collectd plugin to tap in the Docker Stats streaming API using Collectd's [Exec](https://collectd.org/wiki/index.php/Plugin:Exec) plugin. Built with Go 1.7 and tested with Collectd 5.5 and Influx 1.0.
 
-## [Changelog](./CHANGELOG.md)
-
 ## Installation
 
 Example installation for a Ubuntu system. Make changes required to match your own OS.
 
 ```bash
-curl -Ls "https://github.com/dustinblackman/collectd-docker-plugin/releases/download/0.2.0/collectd-docker-plugin-linux-amd64-0.2.0.tar.gz" | tar xz -C /usr/local/bin/
+curl -Ls "https://github.com/dustinblackman/collectd-docker-plugin/releases/download/0.3.0/collectd-docker-plugin-linux-amd64-0.3.0.tar.gz" | tar xz -C /usr/local/bin/
 curl -o /usr/share/collectd https://raw.githubusercontent.com/dustinblackman/collectd-docker-plugin/master/collectd/docker.db
 curl -o /etc/collectd/collectd.conf.d https://raw.githubusercontent.com/dustinblackman/collectd-docker-plugin/master/collectd/docker.conf
 usermod -a -G docker nobody

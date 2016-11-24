@@ -50,6 +50,8 @@ func processStats(containerName string, stats *docker.Stats) {
 		cpuPercent = (cpuDelta / systemDelta) * float64(len(stats.CPUStats.CPUUsage.PercpuUsage)) * 100.0
 	}
 	printCollectD(containerName, "cpu", "percent_usage", uint64(cpuPercent))
+	printCollectD(containerName, "cpu", "kernel_mode", stats.CPUStats.CPUUsage.UsageInKernelmode-stats.PreCPUStats.CPUUsage.UsageInKernelmode)
+	printCollectD(containerName, "cpu", "user_mode", stats.CPUStats.CPUUsage.UsageInUsermode-stats.PreCPUStats.CPUUsage.UsageInUsermode)
 
 	// Network
 	mergedNetworks := map[string]uint64{}

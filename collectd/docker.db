@@ -1,1 +1,2 @@
 network                 value:COUNTER:U:U
+disk                    value:COUNTER:U:U

@@ -67,6 +67,20 @@ func processStats(containerName string, stats *docker.Stats) {
 	for key, value := range mergedNetworks {
 		printCollectD(containerName, "network", toUnderscore(key), value)
 	}
+
+	// Block I/O
+	var blkRead, blkWrite uint64
+	for _, bioEntry := range stats.BlkioStats.IOServiceBytesRecursive {
+		switch strings.ToLower(bioEntry.Op) {
+		case "read":
+			blkRead = blkRead + bioEntry.Value
+		case "write":
+			blkWrite = blkWrite + bioEntry.Value
+		}
+	}
+	printCollectD(containerName, "disk", "read", blkRead)
+	printCollectD(containerName, "disk", "write", blkWrite)
+
 }
 
 func callStats(container *docker.Container, containerName string, stream bool) error {

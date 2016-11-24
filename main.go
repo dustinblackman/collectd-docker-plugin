@@ -37,6 +37,8 @@ func processStats(containerName string, stats *docker.Stats) {
 	for key, value := range structs.Map(stats.MemoryStats.Stats) {
 		printCollectD(containerName, "memory", toUnderscore(key), value.(uint64))
 	}
+	memoryPercent := (float64(stats.MemoryStats.Stats.TotalRss) * 100.0) / float64(stats.MemoryStats.Limit)
+	printCollectD(containerName, "memory", "percent_usage", uint64(memoryPercent))
 
 	// CPU
 	printCollectD(containerName, "cpu", "total_usage", stats.CPUStats.CPUUsage.TotalUsage)

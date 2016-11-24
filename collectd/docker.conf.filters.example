@@ -1,0 +1,65 @@
+LoadPlugin exec
+<Plugin exec>
+  Exec "nobody:docker" "/usr/local/bin/collectd-docker-plugin"
+</Plugin>
+
+# Add custom TypesDB for network counter stats
+TypesDB "/usr/share/collectd/types.db"
+TypesDB "/usr/share/collectd/docker.db"
+
+# Collectd Chains docs https://collectd.org/wiki/index.php/Chains
+
+# Collectd Naming schema https://collectd.org/wiki/index.php/Identifier
+# Example metric: docker.container_name.cpu.user_mode
+# Plugin:         docker
+# PluginInstance: container_name
+# Type:           cpu
+# TypeInstance:   user_mode
+
+LoadPlugin match_regex
+<Chain "PostCache">
+  <Rule>
+    <Match "regex">
+      Plugin "^docker$"
+    </Match>
+    <Target "jump">
+      Chain "FilterOutDetailedDockerStats"
+    </Target>
+  </Rule>
+
+  Target "write"
+</Chain>
+
+<Chain "FilterOutDetailedDockerStats">
+  <Rule "CPU">
+    <Match "regex">
+      Type "^cpu$"
+      TypeInstance "^(kernel_mode|user_mode|percent_usage)$"
+    </Match>
+    Target "return"
+  </Rule>
+  <Rule "Memory">
+    <Match "regex">
+      Type "^memory$"
+      TypeInstance "^(total_rss|total_cache|hierarchical_memory_limit|percent_usage)$"
+    </Match>
+    Target "return"
+  </Rule>
+  <Rule "Network">
+    <Match "regex">
+      Type "^network$"
+      TypeInstance "^(tx|rx)_bytes$"
+    </Match>
+    Target "return"
+  </Rule>
+  <Rule "BlockIO">
+    <Match "regex">
+      Type "^disk$"
+      TypeInstance "^(read|write)"
+    </Match>
+    Target "return"
+  </Rule>
+
+  # Default (not match)
+  Target "stop"
+</Chain>
